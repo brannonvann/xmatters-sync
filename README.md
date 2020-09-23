@@ -24,7 +24,7 @@
 The data files must follow this convention.
 
 ### User_Input.csv
- -
+ ----
 -  User (required) - targetName or User ID
 - First Name (required)
 - Last Name (required)
@@ -37,7 +37,7 @@ The data files must follow this convention.
 - Role - must correspond to the name of a Role in the targeted environment. If multiple Roles, separate role names by pipes (|)
 
 ### Group_Input.csv
- - 
+ ----
 - Name (Required) - Name of the group
 -  Description - Descripton of the group
 - Supervisors - xMatters targetNames of supervisors of the group. If multiple Supervisors, separate names by pipes (|)
