@@ -172,8 +172,8 @@ async function configPerson(syncDevices, personJson) {
   var devices = [];
   var phoneNumberErrors = [];
   
+  // Mapping function - personJson record to xMatters property names w/translations where necessary
   personJson.map((record) => {
-    // Map personJson record to xMatters property names
     var {
       User: targetName,
       "First Name": firstName,
