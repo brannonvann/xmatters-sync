@@ -3,9 +3,13 @@
 ## Environment Config
 1. Create a file called .env in the root of the project directory
 2. Place the following within that file
+
     a. `PROD_SUBDOMAIN=<xMatters-Subdomain>`
+    
     b. `PROD_USERNAME=<xMatters-REST-User>`
+    
     c. `PROD_PASSWORD=<REST-User-Password>`
+    
 3. The npm package `dotenv` reads this file at runtime and creates Node runtime environment variables to be accessed.
     
 ## Configuration
