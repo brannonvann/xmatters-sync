@@ -1,5 +1,5 @@
 const { np, prod, xm } = require("./config");
-const { userDefaults, deviceDefaults, sourceSettings } = require("./dataSync_defaultConfig");
+const { userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./dataSync_defaultConfig");
 const fs = require("fs"); // Used to save files to disk
 const emailValidator = require("email-validator");
 const phoneValidator = require("awesome-phonenumber");
@@ -12,7 +12,6 @@ const moment = require("moment");
 //#endregion instructions
 
 //#region Configuration
-// np or prod
 const env = prod;
 const { licenseLimitUsers, minUsersInputFile, resultsApiPath } = env;
 
@@ -33,6 +32,7 @@ const syncOptions = {
       "targetName",
       "webLogin",
       "properties",
+      "roles",
     ],
   },
   peopleFilter: (p) => p.externalKey && p.externalKey.startsWith(userDefaults.externalKeyPrefix),
@@ -50,6 +50,27 @@ const syncOptions = {
     ],
   },
   devicesFilter: (d) => d.externalKey && d.externalKey.startsWith(userDefaults.externalKeyPrefix),
+  groups: true,
+  groupsOptions: {
+    fields: [
+      "externalKey",
+      "externallyOwned",
+      "targetName",
+      "description",
+      "allowDuplicates",
+      "useDefaultDevices",
+      "observedByAll",
+      "status",
+      "supervisors"
+    ],
+  },
+  groupsFilter: (g) => g.externalKey && g.externalKey.startsWith(groupDefaults.externalKeyPrefix),
+  groupMembers: false,
+  groupMembersOptions: {
+    fields: [
+
+    ],
+  },
   mirror: true,
 };
 //#endregion Configuration
@@ -59,20 +80,16 @@ const syncOptions = {
 // This section will use configuration above to determine what should sync to xMatters.
 // Reads a json file
 (async () => {
-  // Determine what to sync
-  const syncWhat = [];
-  syncOptions.hasOwnProperty("people") ? syncWhat.push("people") : "";
-  syncOptions.hasOwnProperty("groups") ? syncWhat.push("groups") : "";
-  syncOptions.hasOwnProperty("groupMembers") ? syncWhat.push("groupMembers") : "";
-
   // Read the data file so it can be synced to xMatters
-  // const personsJson = syncWhat.includes("people")
-  //   ? await fs.readFileSync(sourceSettings.people.extract, "utf-8")
-  //   : "";
-  const personsJson = syncWhat.includes("people")
+  // people + devices
+  const personsJson = syncOptions.hasOwnProperty("people")
   ? await xm.util.CsvToJsonFromFile(sourceSettings.people.extract)
   : "";
-  console.log(personsJson);
+  
+  // groups
+  const groupsJson = syncOptions.hasOwnProperty("groups")
+  ? await xm.util.CsvToJsonFromFile(sourceSettings.groups.extract)
+  : "";
 
   // Verify contents of file
   const numEntries_Users = personsJson.length;
@@ -89,7 +106,16 @@ const syncOptions = {
     const { people, devices, emailAddressErrors, phoneNumberErrors } = syncOptions.hasOwnProperty("people")
       ? await configPerson(syncOptions.hasOwnProperty("devices"), personsJson)
       : [];
-    const data = { people, devices };
+
+    const groups = syncOptions.hasOwnProperty("groups")
+    ? await configGroups(groupsJson)
+    : [];
+
+    const groupMembers = syncOptions.hasOwnProperty("groupMembers")
+    ? await configMembers(groupsJson)
+    : [];
+
+    const data = { people, devices, groups };
     var deviceErrors_email = emailAddressErrors ? emailAddressErrors : "";
     var deviceErrors_phone = phoneNumberErrors ? phoneNumberErrors : "";
 
@@ -101,6 +127,7 @@ const syncOptions = {
       syncResults: { failure },
     } = await xm.sync.DataToxMatters(data, env, syncOptions);
 
+    // Setup data for workflow report - TODO: move to new function?
     var errors = env.errors.map((e) => e.message);
     var info = env.output;
     var results = [];
@@ -140,13 +167,12 @@ const syncOptions = {
 //#region syncPerson
 async function configPerson(syncDevices, personJson) {
   console.log("Setting up Person Data");
-  var devices = [];
   const people = [];
   var emailAddressErrors = [];
+  var devices = [];
   var phoneNumberErrors = [];
   
   personJson.map((record) => {
-    var webLoginValue = userDefaults.webLogin;
     // Map personJson record to xMatters property names
     var {
       User: targetName,
@@ -157,8 +183,10 @@ async function configPerson(syncDevices, personJson) {
       "Work Phone": workPhone,
       "Mobile Phone": mobilePhone,
       "Work Email": email,
+      "SMS Phone": smsPhone,
+      Role: roles,
     } = record;
-
+    
     // Translations
     // Add custom properties to custom fields in xMatters
     // Configure these in dataSync_defaultConfig.js
@@ -177,7 +205,7 @@ async function configPerson(syncDevices, personJson) {
     let userSiteName = siteName != undefined ? siteName : userDefaults.siteName;
 
     // Set webLogin to desired value from config
-    let webLogin = record[userDefaults.webLogin];
+    let webLogin = record[userDefaults.webLoginProp];
     
     // Email devices pre-processing
     if (!emailValidator.validate(email)) {
@@ -192,7 +220,7 @@ async function configPerson(syncDevices, personJson) {
       if (!phoneValidator(work).isValid()) {
         // Push errors to report and set number to null
         phoneNumberErrors.push(
-          `${firstName} ${lastName} | ${targetName} | Work Phone | ${record.BusinessPhone_cd}`
+          `${firstName} ${lastName} | ${targetName} | Work Phone | ${record["Work Phone"]}`
         );
         work = null;
       } else {
@@ -208,9 +236,21 @@ async function configPerson(syncDevices, personJson) {
       if (!phoneValidator(mobile).isValid()) {
         // Push errors to report and set number to null
         phoneNumberErrors.push(
-          `${firstName} ${lastName} | ${targetName} | Mobile Phone | ${record.MobilePhone_cd}`
+          `${firstName} ${lastName} | ${targetName} | Mobile Phone | ${record["Mobile Phone"]}`
         );
         mobile = null;
+      }
+    }
+
+    let sms = smsPhone ? "+" + smsPhone.replace(/\D+/g, "") : null;
+    // Validate phone number format
+    if (sms) {
+      if (!phoneValidator(sms).isValid()) {
+        // Push errors to report and set number to null
+        phoneNumberErrors.push(
+          `${firstName} ${lastName} | ${targetName} | SMS Phone | ${record["SMS Phone"]}`
+        );
+        sms = null;
       }
     }
 
@@ -218,6 +258,9 @@ async function configPerson(syncDevices, personJson) {
     if (work && mobile && work == mobile) {
       work = null;
     }
+
+    // transform roles
+    roles = roles.split("|");
 
     // Map person object
     const person = {
@@ -230,8 +273,9 @@ async function configPerson(syncDevices, personJson) {
       site: userSiteName,
       externalKey: userDefaults.externalKeyPrefix + targetName,
       externallyOwned,
+      roles,
       default: {
-        roles: userDefaults.defaultRoles,
+        //roles: userDefaults.defaultRoles,
         supervisors: userDefaults.personSupervisors,
         timezone: userDefaults.defaultTimeZone,
       },
@@ -242,7 +286,7 @@ async function configPerson(syncDevices, personJson) {
 
     if (syncDevices) {
       // Get device for this itteration
-      let deviceConfig = { work, mobile, email };
+      let deviceConfig = { work, mobile, email, sms };
       deviceDefaults.syncDevices.forEach((device) => {
         var { name, deviceType, delay, sequence, priorityThreshold, externallyOwned } = device;
         var newDevice = {};
@@ -288,28 +332,24 @@ async function configGroups(json) {
   console.log("Setting up Group Data");
   const groups = json.map((record) => {
     // Map json record to xMatters property names
-    const {
-      Status: groupStatus,
-      Company: company,
-      "Support Organization": organization,
-      "Support Group Name": name,
-      "Support Group ID": groupId,
+    var {
+      Name: targetName,
       Description: description,
+      Supervisors: supervisors
     } = record;
 
-    // Translations
-    // const targetName = groupDefaults.simpleName ? name : company + "*" + organization + "*" + name;
-    // const status = groupStatus === "Enabled" ? "ACTIVE" : "INACTIVE";
+    supervisors = supervisors ? supervisors.split("|") : groupDefaults.supervisors;
 
     // Map group objects
     return {
       targetName,
       description,
-      status,
-      supervisors: groupDefaults.groupSupervisors,
+      recipientType: 'GROUP',
+      status: groupDefaults.status,
+      supervisors,
       observedByAll: groupDefaults.observedByAll,
-      observers: groupDefaults.observers,
-      externalKey: groupDefaults.externalKeyPrefix + groupId,
+      //observers: groupDefaults.observers,
+      externalKey: groupDefaults.externalKeyPrefix + targetName,
       externallyOwned: groupDefaults.externallyOwned,
       useDefaultDevices: groupDefaults.useDefaultDevices,
       allowDuplicates: groupDefaults.allowDuplicates,
@@ -320,35 +360,20 @@ async function configGroups(json) {
 //#endregion configGroups
 
 //#region configMembers
-async function configMembers(json, peopleJson, groupsJson) {
+async function configMembers(groupsJson) {
   console.log("Setting up Member Data");
   let groupMembers = [];
-  json.map((record) => {
+  groupsJson.map((record) => {
     // Map json record to xMatters property names
-    const { "Support Group ID": group, "Person ID": personId, "Login ID": id } = record;
-
-    // Filter memebr in group that is not part of groups extract. This is also used to get missing member group info
-    const relatedPerson = peopleJson.find((o) => o["Person ID"] === personId);
-    // Filter members who are not part of user extract
-    const relatedGroup = groupsJson.find((o) => o["Support Group ID"] === group);
-
-    // Only add member if they are part of a group in the group extract
-    if (relatedGroup && relatedPerson) {
-      // Translations
-      const name = relatedGroup["Support Group Name"];
-      const company = relatedGroup["Company"];
-      const organization = relatedGroup["Support Organization"];
-      // Combine name, company and organization
-      const groupName = groupDefaults.simpleName ? name : company + "*" + organization + "*" + name;
-
-      const member = {
-        member: id,
-        group: groupName,
+    var { "Name": group, "Members": members, } = record;
+    members = members.split("|");
+    members.forEach((member) => {
+      var groupMember = {
+        member,
+        group
       };
-
-      // Add the member to the array of members.
-      groupMembers.push(member);
-    }
+      groupMembers.push(groupMember);
+    });
   });
 
   return groupMembers;

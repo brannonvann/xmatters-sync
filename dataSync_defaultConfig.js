@@ -16,7 +16,7 @@ exports.userDefaults = {
   externalKeyPrefix: "XMT-",
   externallyOwned: true,
   fallbackLanguage: "en",
-  webLogin: "Work Email", //set to Work Email, User, or any other custom property name from csv file
+  webLoginProp: "User", //set to Work Email, User, or any other custom property name from csv file
   personSupervisors: [], // Must be a uuid due to api limitations
   siteName: "Default Site",
   customProperties: [ // map custom property names - examples below
@@ -39,7 +39,7 @@ exports.userDefaults = {
  * @constant {boolean} syncDevices.externallyOwned Whether the device should be externally owned
  * @constant {string} syncDevices.emailAddress Required for devices of type "EMAIL". Should be an empty string, do not include a value.
  * @constant {string} syncDevices.phoneNumber Required for devices of type "VOICE". Should be an empty string, do not include a value.
- * @constant {string} syncDevices.accessor tELLS THE SCRIPT LATER
+ * @constant {string} syncDevices.accessor TELLS THE SCRIPT LATER
  * VVVV============ OPTIONAL ================VVVV
  * @constant {string} syncDevices.delay Delay in minutes to go after the related device
  * @constant {string} syncDevices.sequence Determines device order.
@@ -66,7 +66,7 @@ exports.deviceDefaults = {
       deviceType: "TEXT_PHONE",
       externallyOwned: false,
       phoneNumber: "",
-      accessor: "mobile",
+      accessor: "sms",
       /*
       delay: 3,
       sequence: 2,
@@ -100,6 +100,24 @@ exports.deviceDefaults = {
   ],
 };
 
+/**
+ * xMatters Groups Configuration
+ * 
+ */
+exports.groupDefaults = {
+  //supervisors: "", //place target name(s) of users. multiple users - delimit with a pipe (|)
+  externalKeyPrefix: "XMT-",
+  externallyOwned: true,
+  useDefaultDevices: true,
+  allowDuplicates: true,
+  observedByAll: true,
+  status: "ACTIVE",
+};
+
+/** 
+* Path to input files
+*
+*/
 exports.sourceSettings = {
   people: {
     extract: "./dataSync_input/User_Input.csv",

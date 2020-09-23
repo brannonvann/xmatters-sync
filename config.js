@@ -12,7 +12,7 @@ exports.xm = xm;
 
 const prod = xm.environments.create(PROD_SUBDOMAIN, PROD_USERNAME, PROD_PASSWORD, {
   logLevel: "debug",
-  readOnly: true,
+  readOnly: false,
 });
 
 prod.licenseLimitUsers = 695;
