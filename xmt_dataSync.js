@@ -1,4 +1,4 @@
-const { np, prod, xm } = require("./config");
+const { prod, xm } = require("./config");
 const { userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./dataSync_defaultConfig");
 const fs = require("fs"); // Used to save files to disk
 const emailValidator = require("email-validator");
@@ -65,10 +65,11 @@ const syncOptions = {
     ],
   },
   groupsFilter: (g) => g.externalKey && g.externalKey.startsWith(groupDefaults.externalKeyPrefix),
-  groupMembers: false,
+  groupMembers: true,
   groupMembersOptions: {
     fields: [
-
+      "group",
+      "member",
     ],
   },
   mirror: true,
@@ -78,7 +79,6 @@ const syncOptions = {
 //#region rundatasync
 // Starts the batch sync when this file is run
 // This section will use configuration above to determine what should sync to xMatters.
-// Reads a json file
 (async () => {
   // Read the data file so it can be synced to xMatters
   // people + devices
@@ -86,7 +86,7 @@ const syncOptions = {
   ? await xm.util.CsvToJsonFromFile(sourceSettings.people.extract)
   : "";
   
-  // groups
+  // groups + groupMembers
   const groupsJson = syncOptions.hasOwnProperty("groups")
   ? await xm.util.CsvToJsonFromFile(sourceSettings.groups.extract)
   : "";
@@ -115,7 +115,7 @@ const syncOptions = {
     ? await configMembers(groupsJson)
     : [];
 
-    const data = { people, devices, groups };
+    const data = { people, devices, groups, groupMembers };
     var deviceErrors_email = emailAddressErrors ? emailAddressErrors : "";
     var deviceErrors_phone = phoneNumberErrors ? phoneNumberErrors : "";
 
