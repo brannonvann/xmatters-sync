@@ -16,8 +16,8 @@ const prod = xm.environments.create(PROD_SUBDOMAIN, PROD_USERNAME, PROD_PASSWORD
   readOnly: false,
 });
 
-prod.licenseLimitUsers = 695;
-prod.minUsersInputFile = 9;
+prod.licenseLimitUsers = 200;
+prod.minUsersInputFile = 2;
 prod.resultsApiPath =
   "/api/integration/1/functions/99d68524-22fa-440d-82a0-8e97176be23f/triggers?apiKey=4966438f-57a5-404d-ad2d-391a2e0b2b64";
 
