@@ -1,10 +1,15 @@
 # xmtoolbox Standard Sync
 ## Files included
-- xmtoolboxStandardSync.zip - Workflow exported from xMatters. See this section below for configuring the workflow in xMatters
+- `xmtoolboxStandardSync.zip` - Workflow exported from xMatters. See this section below for configuring the workflow in xMatters
+- `config.js` - xMatters environment configuration. Reads things from .env file, as well as static from this file.
+- `dataSync_defaultConfig.js` - data sync specific options. Defaults are held here for users, devices, groups, as well as input file location.
+- `setup.js` - xMatters environment config setup script. Instructions to use this script are below.
+- `setup-syncOptions.js` - sync option config setup script. Instructions to use this script are below.
+- `xmt_dataSync.js` - main sync script. Transforms csv to json, translates and prepares data before using xmtoolbox to sync data.
 
 ## Environment Configuration
 1. Run xMatters environment configuration script by typing `xmatters-setup` into the command line and hitting enter.
-2. Provide values for PROD_SUBDOMAIN, PROD_USERNAME, and PROD_PASSWORD from the environment which you're targeting.
+2. Provide values for PROD_SUBDOMAIN, PROD_USERNAME, and PROD_PASSWORD from the environment which you're targeting.Yeah
 3. After those 3 options, run the Sync Options configuration script by typing `sync-setup` into the command line and hitting enter.
 4. You can select to sync Users, Devices `(if Users = true)`, Groups, and Group Roster `(if Groups = true)`.
 5. This info is all written to a file called `.env` in the same directory. This is used within the synchronization script.
@@ -28,10 +33,10 @@
 3. Copy that value into config.js for the variable `prod.resultsApiPath`.
 
 ## Data files
-1. Create a directory named `datasync_output` in the project directory.
-2. Create two text files in the `datasync_output` directory - `emailErrors.txt` and `phoneErrors.txt`.
-2. Create a directory named `datasync_input` in the project directory.
-3. Place csv files in the root of the `datasync_input` directory
+1. Create a directory named `dataSync_output` in the project directory.
+2. Create two text files in the `dataSync_output` directory - `emailErrors.txt` and `phoneErrors.txt`.
+2. Create a directory named `dataSync_input` in the project directory.
+3. Place csv files in the root of the `dataSync_input` directory
     a. User_Input.csv
     b. Group_Input.csv
 

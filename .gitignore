@@ -116,9 +116,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-#input and output files
-dataSync_input/*
-dataSync_output/*
-
 #mac file
 .DS_Store
