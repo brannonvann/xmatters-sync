@@ -1,6 +1,5 @@
 # xmtoolbox Standard Sync
-
-## Environment Config
+## Environment Configuration
 1. Create a file called .env in the root of the project directory
 2. Place the following within that file
     a. `PROD_SUBDOMAIN=<xMatters-Subdomain>`

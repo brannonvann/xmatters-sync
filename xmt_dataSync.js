@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const { prod, xm } = require("./config");
 const { userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./dataSync_defaultConfig");
 const fs = require("fs"); // Used to save files to disk

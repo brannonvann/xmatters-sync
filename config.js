@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const xm = require("xmtoolbox");
 const env = require('dotenv').config();
 

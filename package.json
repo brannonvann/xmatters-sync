@@ -1,0 +1,34 @@
+{
+  "name": "xmtoolbox-sync",
+  "version": "1.0.0",
+  "description": "## Environment Config 1. Create a file called .env in the root of the project directory 2. Place the following within that file     a. `PROD_SUBDOMAIN=<xMatters-Subdomain>`     b. `PROD_USERNAME=<xMatters-REST-User>`     c. `PROD_PASSWORD=<REST-User-Password>` 3. The npm package `dotenv` reads this file at runtime and creates Node runtime environment variables to be accessed.",
+  "main": "xmt_dataSync.js",
+  "dependencies": {
+    "awesome-phonenumber": "^2.38.0",
+    "dotenv": "^8.2.0",
+    "email-validator": "^2.0.4",
+    "moment": "^2.29.0",
+    "readline-sync": "^1.4.10",
+    "util": "^0.12.3",
+    "xmtoolbox": "^1.0.21"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "none"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hmiedema9/xmtoolbox-sync.git"
+  },
+  "author": "Hayden Miedema",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hmiedema9/xmtoolbox-sync/issues"
+  },
+  "homepage": "https://github.com/hmiedema9/xmtoolbox-sync#readme",
+  "bin": {
+    "run-sync": "./xmt_dataSync.js",
+    "xmatters-setup": "./setup.js",
+    "sync-setup": "./setup-syncOptions.js"
+  }
+}
