@@ -1,3 +1,4 @@
 User,First Name,Last Name,Site,Externally Owned,Work Email,SMS Phone,Mobile Phone,Work Phone,Role
 test.user,Test,User,Default Site,FALSE,test.user@example.com,,,16169999999,Standard User
 test.user2,TestTwo,UserTwo,Default Site,FALSE,test.user2@example.com,,,16169999998,Standard User|Group Supervisor
+jbond007,James,Bond,London,FALSE,jbond007@mi6.uk.gov,44 20 8759 9036,,,Developer|Standard User

@@ -118,3 +118,5 @@ dist
 
 #mac file
 .DS_Store
+
+data/

@@ -1,4 +1,11 @@
 /**
+ * General Sync Options
+ */
+exports.syncDefaults = {
+  shouldBackup: process.env.SHOULD_BACKUP,
+};
+
+/**
  * xMatters Configuration
  * @constant {string} siteName Default xMatters Site Name (targetName)
  * @constant {string} fallbackLanguage Language to set on user record if no property defined for language

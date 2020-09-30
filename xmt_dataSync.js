@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const { prod, xm } = require("./config");
-const { userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./dataSync_defaultConfig");
+const { syncDefaults, userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./dataSync_defaultConfig");
 const fs = require("fs"); // Used to save files to disk
 const emailValidator = require("email-validator");
 const phoneValidator = require("awesome-phonenumber");
@@ -81,6 +81,9 @@ const syncOptions = {
 // Starts the batch sync when this file is run
 // This section will use configuration above to determine what should sync to xMatters.
 (async () => {
+  // Take backup of environment if specified
+  await runBackup();
+
   // Read the data file so it can be synced to xMatters
   // people + devices
   const personsJson = syncOptions.hasOwnProperty("people")
@@ -380,3 +383,20 @@ async function configMembers(groupsJson) {
   return groupMembers;
 }
 //#endregion configMembers
+
+async function runBackup(){
+  if(syncDefaults.shouldBackup === 'true'){
+    const extractOptions = {
+      groups: true,
+      people: true,
+      shifts: true,
+      sites: true,
+    };
+    
+    const path = `./data/${prod.subdomain}.all.json`;
+    const data = await xm.sync.ExtractData(prod, extractOptions);
+    const text = JSON.stringify(data, null, 2);
+    fs.writeFileSync(path, text);
+    console.log("Backup file created at " + path);
+  }
+}
