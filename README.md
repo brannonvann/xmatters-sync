@@ -8,12 +8,14 @@
 - `xmt_dataSync.js` - main sync script. Transforms csv to json, translates and prepares data before using xmtoolbox to sync data.
 
 ## Environment Configuration
-1. Run xMatters environment configuration script by typing `xmatters-setup` into the command line and hitting enter.
-2. Provide values for PROD_SUBDOMAIN, PROD_USERNAME, and PROD_PASSWORD from the environment which you're targeting.Yeah
-3. After those 3 options, run the Sync Options configuration script by typing `sync-setup` into the command line and hitting enter.
-4. You can select to sync Users, Devices `(if Users = true)`, Groups, and Group Roster `(if Groups = true)`.
-5. This info is all written to a file called `.env` in the same directory. This is used within the synchronization script.
-6. You can overwrite all contents of that file by repeating steps 1-4 above. To overwrite sync options, manually delete the option lines written to `.env` and re-run only the sync options script
+1. First, run `npm install` to install dependencies
+2. Net, run `npm link` to link commands to run programs from `package.json`'s `bin` section.
+3. Run xMatters environment configuration script by typing `xmatters-setup` into the command line and hitting enter.
+4. Provide values for PROD_SUBDOMAIN, PROD_USERNAME, and PROD_PASSWORD from the environment which you're targeting.Yeah
+5. After those 3 options, run the Sync Options configuration script by typing `sync-setup` into the command line and hitting enter.
+6. You can select to sync Users, Devices `(if Users = true)`, Groups, and Group Roster `(if Groups = true)`.
+7. This info is all written to a file called `.env` in the same directory. This is used within the synchronization script.
+8. You can overwrite all contents of that file by repeating steps 1-4 above. To overwrite sync options, manually delete the option lines written to `.env` and re-run only the sync options script
 
 ## Sync Configuration
 1. Run sync configuration script by typing `sync-setup` into the command line and hitting enter.
