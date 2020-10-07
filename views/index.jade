@@ -1,0 +1,52 @@
+extends layout
+
+block content
+    form(name="saveSetup", action="saveSetup", method="post")
+      div.input.form-group
+        span.label PROD_SUBDOMAIN
+        input.form-control(type="text", name="domain", value="#{PROD_SUBDOMAIN}")
+      div.input.form-group
+        span.label PROD_USERNAME
+        input.form-control(type="text", name="username", value="#{PROD_USERNAME}")
+      div.input.form-group
+        span.label PROD_PASSWORD
+        input.form-control(type="text", name="password", value="#{PROD_PASSWORD}")
+      div.input.form-group
+        span.label License # of users
+        input.form-control(type="text", name="license", value="#{LICENSELIMIT}")
+      div.input.form-group
+        span.label Min. # Users in CSV
+        input.form-control(type="text", name="minUsers", value="#{MIN_USERS}")
+      div.input.form-group
+        span.label Run backup before sync?
+        input.form-control(type="text", name="shouldBackup", value="#{SHOULD_BACKUP}")
+      div.input.form-group
+        span.label Sync Users?
+        input.form-control(type="text", name="syncUsers", value="#{USERS}")
+      div.input.form-group
+        span.label Sync Devices?
+        input.form-control(type="text", name="syncDevices", value="#{DEVICES}")
+      div.input.form-group
+        span.label Sync Groups?
+        input.form-control(type="text", name="syncGroups", value="#{GROUPS}")
+      div.input.form-group
+        span.label Sync Members?
+        input.form-control(type="text", name="syncMembers", value="#{MEMBERS}")
+        div.actions
+          input(type="submit", value="Save")
+      
+    form(name="runSync", action="/runSync", method="post")
+      input(type="submit", value="Run Sync")
+      
+    form(ref="uploadUserCSV", name="uploadUserCSV", action="/uploadUserCSV", method="post", enctype="multipart/form-data")
+      div.input.form-group
+        span.label Select User CSV file: 
+        input(type="file", name="userCSV")
+        input(type="submit", name="userBtn", value="Upload")
+        
+    form(name="uploadGroupCSV", action="/uploadGroupCSV", method="post", enctype="multipart/form-data")
+      div.input.form-group
+        span.label Select Group CSV file:
+        input(type="file", name="groupCSV")
+        input(type="submit", name="groupBtn", value="Upload")
+
