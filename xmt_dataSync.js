@@ -73,7 +73,7 @@ const syncOptions = {
       "member",
     ],
   },
-  mirror: false,
+  mirror: true,
 };
 //#endregion Configuration
 

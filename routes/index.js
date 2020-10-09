@@ -35,6 +35,7 @@ router.post('/saveSetup', function(req,res){
                 "\nUSERS=" + req.body.syncUsers + "\nDEVICES=" + req.body.syncDevices + "\nGROUPS=" + req.body.syncGroups + "\nMEMBERS=" + req.body.syncMembers;
   console.log(config);
   fs.writeFileSync('.env', config);
+  res.redirect('back');
 });
 
 /* POST Route to run sync with exec command */
@@ -61,6 +62,7 @@ router.post('/uploadUserCSV', function (req, res) {
     } else{
       console.log('It\'s saved!');
     }
+    res.redirect('back');
   });
 });
 
@@ -73,6 +75,7 @@ router.post('/uploadGroupCSV', function (req, res) {
     } else{
       console.log('It\'s saved!');
     }
+    res.redirect('back');
   });
 });
 
