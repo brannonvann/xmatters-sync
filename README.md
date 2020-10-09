@@ -1,11 +1,21 @@
 # xmtoolbox Standard Sync
 ## Files included
-- `xmtoolboxStandardSync.zip` - Workflow exported from xMatters. See this section below for configuring the workflow in xMatters
+- `xmtoolboxStandardSync.zip` - Workflow exported from xMatters. See [this section](#xmatters-worfklow-configuration) below for configuring the workflow in xMatters
 - `config.js` - xMatters environment configuration. Reads things from .env file, as well as static from this file.
 - `dataSync_defaultConfig.js` - data sync specific options. Defaults are held here for users, devices, groups, as well as input file location.
 - `setup.js` - xMatters environment config setup script. Instructions to use this script are below.
 - `setup-syncOptions.js` - sync option config setup script. Instructions to use this script are below.
 - `xmt_dataSync.js` - main sync script. Transforms csv to json, translates and prepares data before using xmtoolbox to sync data.
+
+## Running with Docker
+1. Clone this repo
+2. Run `docker-compose up`
+3. Browse to http://localhost:3000
+4. Setup the sync for your environment by filling out the form and clicking "Save"
+5. Browse and find your `User_Input.csv` and `Group_Input.csv` files
+6. Run the sync using the "Run Sync" button
+7. Output from the sync will be dumped to the console where the container was started
+ - You can also browse to your environment and see the most recent event from the workflow running if you've configured the workflow. For instructions, [see this section below](#xmatters-worfklow-configuration) 
 
 ## Environment Configuration
 1. First, run `npm install` to install dependencies
