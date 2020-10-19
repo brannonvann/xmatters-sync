@@ -18,26 +18,31 @@
  - You can also browse to your environment and see the most recent event from the workflow running if you've configured the workflow. For instructions, [see this section below](#xmatters-worfklow-configuration) 
 
 ## Environment Configuration
-1. First, run `npm install` to install dependencies
-2. Net, run `npm link` to link commands to run programs from `package.json`'s `bin` section.
-3. Run xMatters environment configuration script by typing `xmatters-setup` into the command line and hitting enter.
-4. Provide values for PROD_SUBDOMAIN, PROD_USERNAME, and PROD_PASSWORD from the environment which you're targeting.Yeah
-5. After those 3 options, run the Sync Options configuration script by typing `sync-setup` into the command line and hitting enter.
-6. You can select to sync Users, Devices `(if Users = true)`, Groups, and Group Roster `(if Groups = true)`.
-7. This info is all written to a file called `.env` in the same directory. This is used within the synchronization script.
-8. You can overwrite all contents of that file by repeating steps 1-4 above. To overwrite sync options, manually delete the option lines written to `.env` and re-run only the sync options script
+1. Clone this repo with `git clone https://github.com/hmiedema9/xmtoolbox-sync`
+2. Run `npm install` to install dependencies
+3. Net, run `npm link` to link commands to run programs from `package.json`'s `bin` section.
+4. Run xMatters environment configuration script by typing `xmatters-setup` into the command line and hitting enter.
+5. Provide values for PROD_SUBDOMAIN, PROD_USERNAME, and PROD_PASSWORD from the environment which you're targeting.Yeah
+6. After those 3 options, run the Sync Options configuration script by typing `sync-setup` into the command line and hitting enter.
+7. You can select to sync Users, Devices `(if Users = true)`, Groups, and Group Roster `(if Groups = true)`.
+8. This info is all written to a file called `.env` in the same directory. This is used within the synchronization script.
+9. You can overwrite all contents of that file by repeating steps 1-4 above. To overwrite sync options, manually delete the option lines written to `.env` and re-run only the sync options script
 
 ## Sync Configuration
 1. Run sync configuration script by typing `sync-setup` into the command line and hitting enter.
 2. Answer yes (Y) or no (N) to each of the following questions. This will determine what is synchronized between the provided data files and your xMatters environment.
 3. Options are Users, Devices (if Users are synced), Groups, and Group Roster (if Groups are synced).
 
+## Default Sync Option Setup
 After running this sync configuration script, there are more defaults set for options in code as well as custom properties for users. Go to `dataSync_defaultConfig.js` if any of this needs adjusting or editing. Options and their defaults are listed below:
 
 User Defaults
 ----
 - `defaultRoles` - if roles are not present in the CSV data file, this array of role(s) will be used to synchronize users
 - `defaultTimeZone`
+
+## Running the sync
+1. Once configuration of everything above is complete, run the sync using `run-sync` or `node xmt_dataSync.js`
 
 ## Data Files
 There are example csv files for users + groups in the dataSync_input directory. The convention of these are also explained below. There are also empty text files in the `dataSync_output` directory that are written to if there are validation errors with phone numbers or emails.
