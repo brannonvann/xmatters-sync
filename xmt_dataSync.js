@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const { prod, xm } = require("./config");
-const { syncDefaults, userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./dataSync_defaultConfig");
+const { prod, xm, syncDefaults, userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./config");
+//const { syncDefaults, userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./dataSync_defaultConfig");
 const fs = require("fs"); // Used to save files to disk
 const emailValidator = require("email-validator");
 const phoneValidator = require("awesome-phonenumber");
@@ -20,7 +20,7 @@ const { licenseLimitUsers, minUsersInputFile, resultsApiPath } = env;
 // Datasync allows for People and Devices together, Groups and groupMembers
 // You cannot sync Devices without People.
 const syncOptions = {
-  people: true,
+  people: (process.env.USERS == 'true'),
   peopleOptions: {
     embed: "roles",
     fields: [
@@ -37,7 +37,7 @@ const syncOptions = {
     ],
   },
   peopleFilter: (p) => p.externalKey && p.externalKey.startsWith(userDefaults.externalKeyPrefix),
-  devices: true,
+  devices: (process.env.DEVICES == 'true'),
   devicesOptions: {
     fields: [
       "deviceType",
@@ -51,7 +51,7 @@ const syncOptions = {
     ],
   },
   devicesFilter: (d) => d.externalKey && d.externalKey.startsWith(userDefaults.externalKeyPrefix),
-  groups: true,
+  groups: (process.env.GROUPS == 'true'),
   groupsOptions: {
     fields: [
       "externalKey",
@@ -66,14 +66,24 @@ const syncOptions = {
     ],
   },
   groupsFilter: (g) => g.externalKey && g.externalKey.startsWith(groupDefaults.externalKeyPrefix),
-  groupMembers: true,
+  groupMembers: (process.env.MEMBERS == 'true'),
   groupMembersOptions: {
     fields: [
       "group",
       "member",
     ],
   },
-  mirror: true,
+  shifts: false,
+  shiftsOptions : {
+    fields: [
+      "name",
+      "description",
+      "start",
+      "end",
+      "members"
+    ],
+  },
+  mirror: false,
 };
 //#endregion Configuration
 
@@ -93,6 +103,11 @@ const syncOptions = {
   // groups + groupMembers
   const groupsJson = syncOptions.hasOwnProperty("groups")
   ? await xm.util.CsvToJsonFromFile(sourceSettings.groups.extract)
+  : "";
+
+  // shifts
+  const shiftsJson = syncOptions.hasOwnProperty("shifts")
+  ? await xm.util.CsvToJsonFromFile(sourceSettings.shifts.extract)
   : "";
 
   // Verify contents of file
@@ -119,7 +134,11 @@ const syncOptions = {
     ? await configMembers(groupsJson)
     : [];
 
-    const data = { people, devices, groups, groupMembers };
+    const shifts = syncOptions.hasOwnProperty("shifts")
+    ? await configShifts(shiftsJson)
+    : [];
+
+    const data = { people, devices, groups, groupMembers, shifts };
     var deviceErrors_email = emailAddressErrors ? emailAddressErrors : "";
     var deviceErrors_phone = phoneNumberErrors ? phoneNumberErrors : "";
 
@@ -384,6 +403,37 @@ async function configMembers(groupsJson) {
 }
 //#endregion configMembers
 
+//#region configShifts
+async function configShifts(json) {
+  console.log("Setting up Shift Data");
+  const shifts = json.map((record) => {
+    // Map json record to xMatters property names
+    var {
+      Name: name,
+      Description: description,
+      Start: start,
+      End: end,
+      Members: members,
+      Group: group,
+    } = record;
+
+    members = members ? members.split("|") : [];
+
+    // Map shift objects
+    return {
+      name,
+      description,
+      start,
+      end,
+      members,
+      groupw
+    };
+  });
+  return shifts;
+}
+//#endregion configShifts
+
+//#region backup
 async function runBackup(){
   if(syncDefaults.shouldBackup === 'true'){
     const extractOptions = {
@@ -400,3 +450,4 @@ async function runBackup(){
     console.log("Backup file created at " + path);
   }
 }
+//#endregion backup
