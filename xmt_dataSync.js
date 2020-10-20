@@ -426,7 +426,7 @@ async function configShifts(json) {
       start,
       end,
       members,
-      groupw
+      group
     };
   });
   return shifts;
