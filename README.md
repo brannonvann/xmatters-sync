@@ -19,8 +19,8 @@
 
 ## Environment Configuration
 1. Clone this repo with `git clone https://github.com/hmiedema9/xmtoolbox-sync`
-2. Run `npm install` to install dependencies
-3. Net, run `npm link` to link commands to run programs from `package.json`'s `bin` section.
+2. Run `sudo npm install` to install dependencies
+3. Net, run `sudo npm link` to link commands to run programs from `package.json`'s `bin` section.
 4. Run xMatters environment configuration script by typing `xmatters-setup` into the command line and hitting enter.
 5. Provide values for PROD_SUBDOMAIN, PROD_USERNAME, and PROD_PASSWORD from the environment which you're targeting.Yeah
 6. After those 3 options, run the Sync Options configuration script by typing `sync-setup` into the command line and hitting enter.
@@ -45,7 +45,7 @@ User Defaults
 1. Once configuration of everything above is complete, run the sync using `run-sync` or `node xmt_dataSync.js`
 
 ## Data Files
-There are example csv files for users + groups in the dataSync_input directory. The convention of these are also explained below. There are also empty text files in the `dataSync_output` directory that are written to if there are validation errors with phone numbers or emails.
+There are example csv files for users + groups in the `dataSync_input` directory. The convention of these are also explained below. There are also empty text files in the `dataSync_output` directory that are written to if there are validation errors with phone numbers or emails.
 
 ### CSV Required Format
 The data files must follow this convention.
@@ -74,3 +74,6 @@ The data files must follow this convention.
 1. Import the xmtoolboxStandardSync.zip folder into your xMatters environment. 
 2. Go find the newly imported workflow's webhook URL in Flow Designer.
 3. Copy that value into config.js for the variable `prod.resultsApiPath`.
+4. After importing the workflow, go into the forms of the workflow and add recipients to the form for who should receive results of the sync
+![Workflow Layout](media/sync-flow1.png?raw=true)
+![Workflow Recipients](media/sync-flow2.png?raw=true)
