@@ -73,7 +73,7 @@ const syncOptions = {
       "member",
     ],
   },
-  shifts: false,
+  shifts: (process.env.SHIFTS == 'true'),
   shiftsOptions : {
     fields: [
       "name",
@@ -158,6 +158,12 @@ const syncOptions = {
       Object.keys(syncResults[objectName]).map((operation) => {
         const count = syncResults[objectName][operation].length;
         if (operation !== "remove") results.push(`${objectName} ${operation}: ${count}`);
+        //TODO: find created User's targetName and log
+        // if (operation === "created" && objectName === 'people'){
+        //   Object.keys(syncResults[objectName][operation]).map((createdObject) => {
+        //     results.push(`Created User: ${createdObject.targetName}`);
+        //   });
+        // }
       });
     });
     const endTime = moment();
@@ -181,7 +187,7 @@ const syncOptions = {
     results,
     deviceErrors_email,
     deviceErrors_phone,
-    recipients: ["xMatters Sync Group"],
+    //recipients: ["xMatters Sync Group"],
     subject: `${failure ? "FAILURE |" : "SUCCESS |"} xMatters Sync Results`,
   });
 })();
@@ -194,7 +200,8 @@ async function configPerson(syncDevices, personJson) {
   var emailAddressErrors = [];
   var devices = [];
   var phoneNumberErrors = [];
-  
+  //filter out empty usernames
+  personJson = personJson.filter(person => person.User !== '');
   // Mapping function - personJson record to xMatters property names w/translations where necessary
   personJson.map((record) => {
     var {
@@ -283,7 +290,9 @@ async function configPerson(syncDevices, personJson) {
     }
 
     // transform roles
-    roles = roles.split("|");
+    if(roles){
+      roles = roles.split("|");
+    }
 
     // Map person object
     const person = {
