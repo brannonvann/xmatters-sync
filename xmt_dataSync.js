@@ -96,17 +96,17 @@ const syncOptions = {
 
   // Read the data file so it can be synced to xMatters
   // people + devices
-  const personsJson = syncOptions.hasOwnProperty("people")
+  const personsJson = syncOptions.people == true
   ? await xm.util.CsvToJsonFromFile(sourceSettings.people.extract)
   : "";
   
   // groups + groupMembers
-  const groupsJson = syncOptions.hasOwnProperty("groups")
+  const groupsJson = syncOptions.groups == true
   ? await xm.util.CsvToJsonFromFile(sourceSettings.groups.extract)
   : "";
 
   // shifts
-  const shiftsJson = syncOptions.hasOwnProperty("shifts")
+  const shiftsJson = syncOptions.shifts == true
   ? await xm.util.CsvToJsonFromFile(sourceSettings.shifts.extract)
   : "";
 
@@ -126,15 +126,15 @@ const syncOptions = {
       ? await configPerson(syncOptions.hasOwnProperty("devices"), personsJson)
       : [];
 
-    const groups = syncOptions.hasOwnProperty("groups")
+    const groups = syncOptions.groups == true
     ? await configGroups(groupsJson)
     : [];
 
-    const groupMembers = syncOptions.hasOwnProperty("groupMembers")
+    const groupMembers = syncOptions.groupMembers == true
     ? await configMembers(groupsJson)
     : [];
 
-    const shifts = syncOptions.hasOwnProperty("shifts")
+    const shifts = syncOptions.shifts == true
     ? await configShifts(shiftsJson)
     : [];
 
