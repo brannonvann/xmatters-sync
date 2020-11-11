@@ -1,0 +1,19 @@
+FROM node:latest
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY package*.json ./
+
+RUN npm install
+
+# Bundle app source + copy files
+COPY .env package*.json config.js xmt_dataSync.js ./
+COPY dataSync_input/ /usr/src/app/dataSync_input/
+COPY dataSync_output/ /usr/src/app/dataSync_output/
+COPY data/ /usr/src/app/data/
+
+ENTRYPOINT ["./xmt_dataSync.js"]

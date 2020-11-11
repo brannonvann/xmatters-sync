@@ -19,7 +19,7 @@ block content
         input.form-control(type="text", name="minUsers", value="#{MIN_USERS}")
       div.input.form-group
         span.label Run backup before sync?
-        input.form-control(type="text", name="shouldBackup", value="#{SHOULD_BACKUP}")
+        input.form-control(type="checkbox", name="shouldBackup", checked=("#{SHOULD_BACKUP" === 'true'} ? "checked" : undefined))
       div.input.form-group
         span.label Sync Users?
         input.form-control(type="text", name="syncUsers", value="#{USERS}")

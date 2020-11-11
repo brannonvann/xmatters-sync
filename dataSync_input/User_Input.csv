@@ -1,4 +1,7 @@
 User,First Name,Last Name,Site,Externally Owned,Work Email,SMS Phone,Mobile Phone,Work Phone,Role
-test.user,Test,User,Default Site,FALSE,test.user@example.com,,,16169999999,Standard User
-test.user2,TestTwo,UserTwo,Default Site,FALSE,test.user2@example.com,,,16169999998,Standard User|Group Supervisor
-jbond007,James,Bond,London,FALSE,jbond007@mi6.uk.gov,44 20 8759 9037,,,Developer|Standard User
+test.user2,TestTwo,UserTwo,Default Site,FALSE,test.user2@example.com,,,+1616-999-9998,Standard User|Group Supervisor
+test.user3,TestThree,UserThree,Default Site,FALSE,test.user3@example.com,,,+1616.999.9998,Standard User|Group Supervisor
+jbond007,James,Bond,London,FALSE,jbond007@mi6.uk.gov,+44 20 8759 9037,,,Developer|Standard User
+localsync,Sandra,SyncMe,Default Site,FALSE,sandra@example.com,16163132794,,,Standard User
+anotheruser,Another,User,Grand Rapids,FALSE,another@example.com,16163132794,,,Standard User|Group Supervisor
+deruitda,Danny,Deruiter,Kentwood,FALSE,danny@example.com,16162342525,,,

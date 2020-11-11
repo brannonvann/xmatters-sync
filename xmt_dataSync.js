@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-const { prod, xm, syncDefaults, userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./config");
-//const { syncDefaults, userDefaults, deviceDefaults, groupDefaults, sourceSettings } = require("./dataSync_defaultConfig");
+const { prod, xm, syncDefaults, userDefaults, deviceDefaults, groupDefaults, siteDefaults, sourceSettings } = require("./config");
 const fs = require("fs"); // Used to save files to disk
 const emailValidator = require("email-validator");
 const phoneValidator = require("awesome-phonenumber");
@@ -34,9 +33,11 @@ const syncOptions = {
       "webLogin",
       "properties",
       "roles",
+      "supervisors"
     ],
   },
-  peopleFilter: (p) => p.externalKey && p.externalKey.startsWith(userDefaults.externalKeyPrefix),
+  peopleFilter: (p => (p.externalKey && p.externalKey.startsWith(userDefaults.externalKeyPrefix && p.properties.shouldSync == true)) || p.properties.shouldSync == true),
+  //peopleFilter: (p => p.properties.shouldSync == true),
   devices: (process.env.DEVICES == 'true'),
   devicesOptions: {
     fields: [
@@ -73,17 +74,8 @@ const syncOptions = {
       "member",
     ],
   },
-  shifts: (process.env.SHIFTS == 'true'),
-  shiftsOptions : {
-    fields: [
-      "name",
-      "description",
-      "start",
-      "end",
-      "members"
-    ],
-  },
-  mirror: false,
+  sites: true,
+  mirror: true,
 };
 //#endregion Configuration
 
@@ -92,7 +84,9 @@ const syncOptions = {
 // This section will use configuration above to determine what should sync to xMatters.
 (async () => {
   // Take backup of environment if specified
-  await runBackup();
+  if(syncDefaults.shouldBackup === 'true'){
+    await runBackup();
+  }
 
   // Read the data file so it can be synced to xMatters
   // people + devices
@@ -105,13 +99,8 @@ const syncOptions = {
   ? await xm.util.CsvToJsonFromFile(sourceSettings.groups.extract)
   : "";
 
-  // shifts
-  const shiftsJson = syncOptions.shifts == true
-  ? await xm.util.CsvToJsonFromFile(sourceSettings.shifts.extract)
-  : "";
-
   // Verify contents of file
-  const numEntries_Users = personsJson.length;
+  const numEntries_Users = personsJson.length - 1;
   if (numEntries_Users > licenseLimitUsers) {
     failure = true;
     var msgStopped = `Stopping Sync. User Input file contains more users (${numEntries_Users}) than xMatters environment license limit (${licenseLimitUsers}).`;
@@ -122,8 +111,8 @@ const syncOptions = {
     console.log(msgStopped);
   } else {
     // Generate data to sync using xMtoolbox DataToxMatters function
-    const { people, devices, emailAddressErrors, phoneNumberErrors } = syncOptions.hasOwnProperty("people")
-      ? await configPerson(syncOptions.hasOwnProperty("devices"), personsJson)
+    const { people, devices, siteNames, emailAddressErrors, phoneNumberErrors } = syncOptions.people == true
+      ? await configPerson(syncOptions.devices == true, personsJson)
       : [];
 
     const groups = syncOptions.groups == true
@@ -134,11 +123,11 @@ const syncOptions = {
     ? await configMembers(groupsJson)
     : [];
 
-    const shifts = syncOptions.shifts == true
-    ? await configShifts(shiftsJson)
+    const sites = syncOptions.sites == true
+    ? await configSites(siteNames)
     : [];
 
-    const data = { people, devices, groups, groupMembers, shifts };
+    const data = { people, devices, groups, groupMembers, sites};
     var deviceErrors_email = emailAddressErrors ? emailAddressErrors : "";
     var deviceErrors_phone = phoneNumberErrors ? phoneNumberErrors : "";
 
@@ -154,16 +143,32 @@ const syncOptions = {
     var errors = env.errors.map((e) => e.message);
     var info = env.output;
     var results = [];
+    var peopleCreated = '';
+	  var peopleDeleted = '';
     Object.keys(syncResults).map((objectName) => {
       Object.keys(syncResults[objectName]).map((operation) => {
         const count = syncResults[objectName][operation].length;
         if (operation !== "remove") results.push(`${objectName} ${operation}: ${count}`);
-        //TODO: find created User's targetName and log
-        // if (operation === "created" && objectName === 'people'){
-        //   Object.keys(syncResults[objectName][operation]).map((createdObject) => {
-        //     results.push(`Created User: ${createdObject.targetName}`);
-        //   });
-        // }
+        let nameArray = [];
+        let someArray = syncResults[objectName][operation];
+
+        // Make up two lists showing User IDs of all people created or deleted
+        if (objectName == 'people' && operation.match(/created|deleted/)) {
+          for (let i = 0; i < someArray.length; i++) {
+            let usr = someArray[i];
+            //console.log('Usr ' + JSON.stringify(usr));
+            if (someArray[i].targetName) {
+              nameArray.push(someArray[i].targetName)
+            }
+          }
+
+          if (operation == 'deleted') {
+            peopleCreated = nameArray.join(', ');
+          }
+          if (operation == 'created') {
+            peopleDeleted = nameArray.join(', ');
+          }
+        }
       });
     });
     const endTime = moment();
@@ -187,7 +192,8 @@ const syncOptions = {
     results,
     deviceErrors_email,
     deviceErrors_phone,
-    //recipients: ["xMatters Sync Group"],
+    peopleCreated, 
+    peopleDeleted,
     subject: `${failure ? "FAILURE |" : "SUCCESS |"} xMatters Sync Results`,
   });
 })();
@@ -200,10 +206,12 @@ async function configPerson(syncDevices, personJson) {
   var emailAddressErrors = [];
   var devices = [];
   var phoneNumberErrors = [];
+  const siteNames = [];
   //filter out empty usernames
   personJson = personJson.filter(person => person.User !== '');
   // Mapping function - personJson record to xMatters property names w/translations where necessary
-  personJson.map((record) => {
+  const asyncRes = await Promise.all(personJson.map(async (record) => {
+  // personJson.map((record) => {
     var {
       User: targetName,
       "First Name": firstName,
@@ -227,12 +235,16 @@ async function configPerson(syncDevices, personJson) {
         properties[xmattersName] = record[customProp];
       });
     }
+    properties.shouldSync = true;
 
     // User language
     const language = userDefaults.fallbackLanguage;
 
     // User site
     let userSiteName = siteName != undefined ? siteName : userDefaults.siteName;
+
+    // Add site name to array for site processing if unique
+    if(!siteNames.includes(userSiteName)) siteNames.push(userSiteName);
 
     // Set webLogin to desired value from config
     let webLogin = record[userDefaults.webLoginProp];
@@ -289,11 +301,22 @@ async function configPerson(syncDevices, personJson) {
       work = null;
     }
 
-    // transform roles
+    // transform roles, or if empty take roles from user currently, or if empty + user not in xm take defaults
     if(roles){
       roles = roles.split("|");
+      // get user from xm + combine roles
+    } else {
+      try {
+        var xmuser = await xm.people.get(env, targetName, { embed: 'roles' }, true);
+        roles = [];
+      } catch (error) {
+        roles = userDefaults.defaultRoles;
+      }
+      if(xmuser){
+        xmuser.roles.data.forEach(x => roles.push(x.name));
+      }
     }
-
+ 
     // Map person object
     const person = {
       firstName,
@@ -306,15 +329,13 @@ async function configPerson(syncDevices, personJson) {
       externalKey: userDefaults.externalKeyPrefix + targetName,
       externallyOwned,
       roles,
-      default: {
-        //roles: userDefaults.defaultRoles,
-        supervisors: userDefaults.personSupervisors,
-        timezone: userDefaults.defaultTimeZone,
-      },
+      supervisors: userDefaults.personSupervisors,
     };
 
     // Add person to the array of people
-    people.push(person);
+    if(!people.some(x=>x.targetName === targetName)){
+      people.push(person);
+    }
 
     if (syncDevices) {
       // Get device for this itteration
@@ -345,7 +366,7 @@ async function configPerson(syncDevices, personJson) {
         }
       });
     } // Close syncDevices
-  }); // Close personJson map
+  })); // Close personJson map
   // Filter invalid devices
   devices = devices.filter((d) => d.phoneNumber || d.emailAddress);
 
@@ -355,7 +376,7 @@ async function configPerson(syncDevices, personJson) {
   await fs.writeFileSync("./dataSync_output/emailErrors.txt", emailAddressErrors_join);
   await fs.writeFileSync("./dataSync_output/phoneErrors.txt", phoneNumberErrors_join);
 
-  return { people, devices, emailAddressErrors, phoneNumberErrors };
+  return { people, devices, siteNames, emailAddressErrors, phoneNumberErrors };
 }
 //#endregion syncPerson
 
@@ -412,51 +433,53 @@ async function configMembers(groupsJson) {
 }
 //#endregion configMembers
 
-//#region configShifts
-async function configShifts(json) {
-  console.log("Setting up Shift Data");
-  const shifts = json.map((record) => {
-    // Map json record to xMatters property names
-    var {
-      Name: name,
-      Description: description,
-      Start: start,
-      End: end,
-      Members: members,
-      Group: group,
-    } = record;
-
-    members = members ? members.split("|") : [];
-
-    // Map shift objects
-    return {
-      name,
-      description,
-      start,
-      end,
-      members,
-      group
-    };
-  });
-  return shifts;
+//#region configSites
+async function configSites(siteNames){
+  const sites = [];
+  console.log("Setting up Site Data");
+  const asyncRes = await Promise.all(siteNames.map(async site => {
+    var site = {
+      name: site,
+      country: siteDefaults.country,
+      language: siteDefaults.language,
+      timezone: siteDefaults.timeZone,
+      status: siteDefaults.status
+    }
+    if(!sites.some(s => s.name === site.name)){
+      try {
+        var xmsite = await xm.sites.get(env, site.name, {}, true);
+      } catch (error) {
+        sites.push(site);
+      }
+      // var xmsite = xm.site.get(env, userSiteName, {}, true);
+      if(xmsite){
+        site.name = xmsite.name;
+        site.country = xmsite.country;
+        site.language = xmsite.language;
+        site.timezone = xmsite.timezone;
+      }
+      if(!sites.some(s => s.name === site.name)){
+        sites.push(site);
+      }
+    }
+  }));
+  return sites;
 }
-//#endregion configShifts
+//#endregion configSites
 
 //#region backup
 async function runBackup(){
-  if(syncDefaults.shouldBackup === 'true'){
-    const extractOptions = {
-      groups: true,
-      people: true,
-      shifts: true,
-      sites: true,
-    };
-    
-    const path = `./data/${prod.subdomain}.all.json`;
-    const data = await xm.sync.ExtractData(prod, extractOptions);
-    const text = JSON.stringify(data, null, 2);
-    fs.writeFileSync(path, text);
-    console.log("Backup file created at " + path);
-  }
+  const extractOptions = {
+    groups: true,
+    people: true,
+    shifts: true,
+    sites: true,
+  };
+  
+  const path = `./data/${prod.subdomain}.all.json`;
+  const data = await xm.sync.ExtractData(prod, extractOptions);
+  const text = JSON.stringify(data, null, 2);
+  fs.writeFileSync(path, text);
+  console.log("Backup file created at " + path);
 }
 //#endregion backup

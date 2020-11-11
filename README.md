@@ -66,7 +66,7 @@ The data files must follow this convention.
 ### Group_Input.csv
  ----
 - Name (Required) - Name of the group
--  Description - Descripton of the group
+- Description - Descripton of the group
 - Supervisors - xMatters targetNames of supervisors of the group. If multiple Supervisors, separate names by pipes (|)
 - Members - xMatters targetNames of members of the group. If multiple Members, separate names  by pipes (|)
 
