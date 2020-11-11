@@ -170,12 +170,12 @@ exports.siteDefaults = {
 */
 exports.sourceSettings = {
   people: {
-    extract: "./dataSync_input/User_Input.csv",
+    extract: "./sync_input/User_Input.csv",
   },
   groups: {
-    extract: "./dataSync_input/Group_Input.csv"
+    extract: "./sync_input/Group_Input.csv"
   },
   shifts: {
-    extract: "./dataSync_input/Shift_Input.csv"
+    extract: "./sync_input/Shift_Input.csv"
   },
 };

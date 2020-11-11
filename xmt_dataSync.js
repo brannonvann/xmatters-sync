@@ -229,16 +229,16 @@ async function configPerson(syncDevices, personJson) {
     // Add custom properties to custom fields in xMatters
     // Configure these in dataSync_defaultConfig.js
     let properties = undefined;
-    if (userDefaults.customProperties.length > 0) {
+    if (userDefaults.properties.length > 0) {
       properties = {};
-      userDefaults.customProperties.forEach(({ xmattersName, customProp }) => {
+      userDefaults.properties.forEach(({ xmattersName, customProp }) => {
         properties[xmattersName] = record[customProp];
       });
     }
     properties.shouldSync = true;
 
     // User language
-    const language = userDefaults.fallbackLanguage;
+    const language = userDefaults.language;
 
     // User site
     let userSiteName = siteName != undefined ? siteName : userDefaults.siteName;
@@ -310,7 +310,7 @@ async function configPerson(syncDevices, personJson) {
         var xmuser = await xm.people.get(env, targetName, { embed: 'roles' }, true);
         roles = [];
       } catch (error) {
-        roles = userDefaults.defaultRoles;
+        roles = userDefaults.roles;
       }
       if(xmuser){
         xmuser.roles.data.forEach(x => roles.push(x.name));
@@ -329,7 +329,7 @@ async function configPerson(syncDevices, personJson) {
       externalKey: userDefaults.externalKeyPrefix + targetName,
       externallyOwned,
       roles,
-      supervisors: userDefaults.personSupervisors,
+      supervisors: userDefaults.supervisors,
     };
 
     // Add person to the array of people
@@ -373,8 +373,8 @@ async function configPerson(syncDevices, personJson) {
   // Write email and phone error files
   const emailAddressErrors_join = emailAddressErrors.join("\n");
   const phoneNumberErrors_join = phoneNumberErrors.join("\n");
-  await fs.writeFileSync("./dataSync_output/emailErrors.txt", emailAddressErrors_join);
-  await fs.writeFileSync("./dataSync_output/phoneErrors.txt", phoneNumberErrors_join);
+  await fs.writeFileSync("./sync_output/emailErrors.txt", emailAddressErrors_join);
+  await fs.writeFileSync("./sync_output/phoneErrors.txt", phoneNumberErrors_join);
 
   return { people, devices, siteNames, emailAddressErrors, phoneNumberErrors };
 }
@@ -442,7 +442,7 @@ async function configSites(siteNames){
       name: site,
       country: siteDefaults.country,
       language: siteDefaults.language,
-      timezone: siteDefaults.timeZone,
+      timezone: siteDefaults.timezone,
       status: siteDefaults.status
     }
     if(!sites.some(s => s.name === site.name)){
