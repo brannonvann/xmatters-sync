@@ -1,6 +1,6 @@
 # xmtoolbox Standard Sync
 ## Files included
-- `xmtoolboxStandardSync.zip` - Workflow exported from xMatters. See [this section](#xmatters-worfklow-configuration) below for configuring the workflow in xMatters
+- `xmatters_files/xmtoolboxStandardSync.zip` - Workflow exported from xMatters. See [this section](#xmatters-worfklow-configuration) below for configuring the workflow in xMatters
 - `config.js` - xMatters environment configuration. Reads things from .env file, as well as static from this file.
 - `dataSync_defaultConfig.js` - data sync specific options. Defaults are held here for users, devices, groups, as well as input file location.
 - `setup.js` - xMatters environment config setup script. Instructions to use this script are below.
