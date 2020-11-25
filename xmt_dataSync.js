@@ -456,10 +456,10 @@ async function prepareWorkflowData(syncResults, startTime){
           }
         }
 
-        if (operation == 'deleted') {
+        if (operation == 'created') {
           peopleCreated = nameArray.join(', ');
         }
-        if (operation == 'created') {
+        if (operation == 'deleted') {
           peopleDeleted = nameArray.join(', ');
         }
       }
