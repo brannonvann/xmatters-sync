@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 const xm = require("xmtoolbox");
 const env = require('dotenv').config();
-const fs = require('fs')
 
 //Set credentials environment variables or in this file by replaceing the examples below.
 //Defaults to using environment variables if they are set.
@@ -137,7 +136,7 @@ exports.deviceDefaults = {
  * @constant {boolean} externallyOwned Whether synced groups should be externally owned.
  * @constant {boolean} observedByAll See https://help.xmatters.com/xmapi/index.html#create-a-group for description
  * @constant {string} status ACTIVE or INACTIVE
- * @constant {string} supervisors target name(s) of users. multiple users - delimit with a pipe (|)
+ * @constant {array} supervisors Array of targetNames to use as default group supervisor if not set in CSV
  * @constant {boolean} userDefaultDevices See https://help.xmatters.com/xmapi/index.html#create-a-group for description
  */
 exports.groupDefaults = {
@@ -146,7 +145,7 @@ exports.groupDefaults = {
   externallyOwned: true,
   observedByAll: true,
   status: "ACTIVE",
-  //supervisors: "",
+  supervisors: [],
   useDefaultDevices: true,
 };
 
@@ -174,8 +173,5 @@ exports.sourceSettings = {
   },
   groups: {
     extract: "./sync_input/Group_Input.csv"
-  },
-  shifts: {
-    extract: "./sync_input/Shift_Input.csv"
   },
 };
