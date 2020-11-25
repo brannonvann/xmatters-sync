@@ -13,7 +13,7 @@ const moment = require("moment");
 
 //#region Configuration
 const env = prod;
-const { licenseLimitUsers, minUsersInputFile, resultsApiPath } = env;
+const { licenseLimitUsers, minUsersInputFile } = env;
 
 // Set what you would like to sync.
 // Datasync allows for People and Devices together, Groups and groupMembers
@@ -38,7 +38,7 @@ const syncOptions = {
   },
   peopleFilter: (p => (p.externalKey && p.externalKey.startsWith(userDefaults.externalKeyPrefix && p.properties.shouldSync == true)) || p.properties.shouldSync == true),
   //peopleFilter: (p => p.properties.shouldSync == true),
-  devices: (process.env.DEVICES == 'true'),
+  devices: (process.env.DEVICES == 'true' && process.env.USER == 'true'),
   devicesOptions: {
     fields: [
       "deviceType",
@@ -74,7 +74,7 @@ const syncOptions = {
       "member",
     ],
   },
-  sites: true,
+  sites: false,
   mirror: true,
 };
 //#endregion Configuration
@@ -100,7 +100,7 @@ const syncOptions = {
   : "";
 
   // Verify contents of file
-  const numEntries_Users = personsJson.length - 1;
+  const numEntries_Users = personsJson.length;
   if (numEntries_Users > licenseLimitUsers) {
     failure = true;
     var msgStopped = `Stopping Sync. User Input file contains more users (${numEntries_Users}) than xMatters environment license limit (${licenseLimitUsers}).`;
@@ -119,7 +119,7 @@ const syncOptions = {
     ? await configGroups(groupsJson)
     : [];
 
-    const groupMembers = syncOptions.groupMembers == true
+    const groupMembers = (syncOptions.groupMembers && syncOptions.groups) == true
     ? await configMembers(groupsJson)
     : [];
 
@@ -139,54 +139,18 @@ const syncOptions = {
       syncResults: { failure },
     } = await xm.sync.DataToxMatters(data, env, syncOptions);
 
-    // Setup data for workflow report - TODO: move to new function?
-    var errors = env.errors.map((e) => e.message);
-    var info = env.output;
-    var results = [];
-    var peopleCreated = '';
-	  var peopleDeleted = '';
-    Object.keys(syncResults).map((objectName) => {
-      Object.keys(syncResults[objectName]).map((operation) => {
-        const count = syncResults[objectName][operation].length;
-        if (operation !== "remove") results.push(`${objectName} ${operation}: ${count}`);
-        let nameArray = [];
-        let someArray = syncResults[objectName][operation];
-
-        // Make up two lists showing User IDs of all people created or deleted
-        if (objectName == 'people' && operation.match(/created|deleted/)) {
-          for (let i = 0; i < someArray.length; i++) {
-            let usr = someArray[i];
-            //console.log('Usr ' + JSON.stringify(usr));
-            if (someArray[i].targetName) {
-              nameArray.push(someArray[i].targetName)
-            }
-          }
-
-          if (operation == 'deleted') {
-            peopleCreated = nameArray.join(', ');
-          }
-          if (operation == 'created') {
-            peopleDeleted = nameArray.join(', ');
-          }
-        }
-      });
-    });
-    const endTime = moment();
-    console.log(endTime.format());
-    results.push(`Started: ${startTime}`);
-    results.push(`Ended: ${endTime}`);
-    results.push(`Duration: ${moment(endTime).diff(startTime, "seconds")}s`);
-    console.log(`Duration: ${moment(endTime).diff(startTime, "seconds")}s`);
+    // Setup data for workflow report
+    var { results, info, errors, peopleCreated, peopleDeleted } = await prepareWorkflowData(syncResults, startTime);
   }
-  // Set xMatters Flow API
-  const api = resultsApiPath;
-
-  //POST to the Flow
+  
+  //if data error, push message for workflow report
   if (msgStopped) {
     var results = [];
     results.push(msgStopped);
   }
-  xm.util.post(env, api, {
+
+  //POST to the Flow using path from config file
+  xm.util.post(env, env.resultsApiPath, {
     errors,
     info,
     results,
@@ -367,6 +331,7 @@ async function configPerson(syncDevices, personJson) {
       });
     } // Close syncDevices
   })); // Close personJson map
+
   // Filter invalid devices
   devices = devices.filter((d) => d.phoneNumber || d.emailAddress);
 
@@ -466,6 +431,49 @@ async function configSites(siteNames){
   return sites;
 }
 //#endregion configSites
+
+//#region prepareWorkflowData
+async function prepareWorkflowData(syncResults, startTime){
+  var errors = env.errors.map((e) => e.message);
+  var info = env.output;
+  var results = [];
+  var peopleCreated = '';
+  var peopleDeleted = '';
+  Object.keys(syncResults).map((objectName) => {
+    Object.keys(syncResults[objectName]).map((operation) => {
+      const count = syncResults[objectName][operation].length;
+      if (operation !== "remove") results.push(`${objectName} ${operation}: ${count}`);
+      let nameArray = [];
+      let someArray = syncResults[objectName][operation];
+
+      // Make up two lists showing User IDs of all people created or deleted
+      if (objectName == 'people' && operation.match(/created|deleted/)) {
+        for (let i = 0; i < someArray.length; i++) {
+          let usr = someArray[i];
+          //console.log('Usr ' + JSON.stringify(usr));
+          if (someArray[i].targetName) {
+            nameArray.push(someArray[i].targetName)
+          }
+        }
+
+        if (operation == 'deleted') {
+          peopleCreated = nameArray.join(', ');
+        }
+        if (operation == 'created') {
+          peopleDeleted = nameArray.join(', ');
+        }
+      }
+    });
+  });
+  const endTime = moment();
+  console.log(endTime.format());
+  results.push(`Started: ${startTime}`);
+  results.push(`Ended: ${endTime}`);
+  results.push(`Duration: ${moment(endTime).diff(startTime, "seconds")}s`);
+  console.log(`Duration: ${moment(endTime).diff(startTime, "seconds")}s`);
+  return { results, info, errors, peopleCreated, peopleDeleted}
+}
+//#endregion prepareWorkflowData
 
 //#region backup
 async function runBackup(){
